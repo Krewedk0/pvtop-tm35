@@ -18,20 +18,18 @@ type Hvs struct {
 }
 
 type conState struct {
-	Result struct {
-		RoundState struct {
-			HRS            string    `json:"height/round/step"`
-			HeightVoteStep []Hvs     `json:"height_vote_set"`
-			StartTime      time.Time `json:"start_time"`
-			Proposer       struct{
-				Index int `json:"index"`
-			}  `json:"proposer"`
-		} `json:"round_state"`
-	} `json:"result"`
+	RoundState struct {
+		HRS            string    `json:"height/round/step"`
+		HeightVoteStep []Hvs     `json:"height_vote_set"`
+		StartTime      time.Time `json:"start_time"`
+		Proposer       struct{
+			Index int `json:"index"`
+		}  `json:"proposer"`
+	} `json:"round_state"`
 }
 
 func (cs *conState) getRound() (int, error) {
-	round := strings.Split(cs.Result.RoundState.HRS, "/")
+	round := strings.Split(cs.RoundState.HRS, "/")
 	if len(round) < 2 {
 		return 0, errors.New("invalid round")
 	}
@@ -43,7 +41,7 @@ func (cs *conState) getRound() (int, error) {
 }
 
 func (cs *conState) getVotePercent(round int) (float64, error) {
-	bitArray := strings.Split(cs.Result.RoundState.HeightVoteStep[round].PreVotesBitArray, " ")
+	bitArray := strings.Split(cs.RoundState.HeightVoteStep[round].PreVotesBitArray, " ")
 	if len(bitArray) < 3 {
 		return 0, errors.New("invalid bit array")
 	}
@@ -55,7 +53,7 @@ func (cs *conState) getVotePercent(round int) (float64, error) {
 }
 
 func (cs *conState) getCommitPercent(round int) (float64, error) {
-	bitArray := strings.Split(cs.Result.RoundState.HeightVoteStep[round].PreCommitsBitArray, " ")
+	bitArray := strings.Split(cs.RoundState.HeightVoteStep[round].PreCommitsBitArray, " ")
 	if len(bitArray) < 3 {
 		return 0, errors.New("invalid bit array")
 	}
@@ -94,8 +92,8 @@ func GetHeightVoteStep(url string, names *ValNames) (votes []VoteState, votePerc
 	if err != nil {
 		return nil, 0, 0, "", 0, -1, err
 	}
-	for i := range state.Result.RoundState.HeightVoteStep[round].Prevotes {
-		vote := state.Result.RoundState.HeightVoteStep[round].Prevotes[i]
+	for i := range state.RoundState.HeightVoteStep[round].Prevotes {
+		vote := state.RoundState.HeightVoteStep[round].Prevotes[i]
 		voted := false
 		votedZeroes := false
 		if vote != "nil-Vote" {
@@ -112,8 +110,8 @@ func GetHeightVoteStep(url string, names *ValNames) (votes []VoteState, votePerc
 			VotedZeroes: votedZeroes,
 		})
 	}
-	for i := range state.Result.RoundState.HeightVoteStep[round].Precommits {
-                commit := state.Result.RoundState.HeightVoteStep[round].Precommits[i]
+	for i := range state.RoundState.HeightVoteStep[round].Precommits {
+                commit := state.RoundState.HeightVoteStep[round].Precommits[i]
                 committed := false
                 if commit != "nil-Vote" {
                         committed = true
@@ -128,6 +126,6 @@ func GetHeightVoteStep(url string, names *ValNames) (votes []VoteState, votePerc
 	if err != nil {
 		return nil, 0, 0, "", 0, -1, err
 	}
-	dur = time.Now().UTC().Sub(state.Result.RoundState.StartTime)
-	return votes, votePercent, commitPercent, state.Result.RoundState.HRS, dur, state.Result.RoundState.Proposer.Index, nil
+	dur = time.Now().UTC().Sub(state.RoundState.StartTime)
+	return votes, votePercent, commitPercent, state.RoundState.HRS, dur, state.RoundState.Proposer.Index, nil
 }
